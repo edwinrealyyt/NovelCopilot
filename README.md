@@ -78,11 +78,32 @@ NovelCopilot/
 
 ## 🚀 启动与部署指南
 
-### 1. 本地极速启动 (Windows 环境)
+### 1. 本地极速启动 与 一键部署 (Windows 环境 - 无需 Docker)
+
+#### 方法 A: 使用 PowerShell 一键部署脚本 (推荐，适合纯净新环境或未安装 Python 的系统)
+您可以直接下载单脚本运行，无需手动复制或克隆整个源码库：
+1. 打开 PowerShell 并运行以下命令（它将自动下载部署脚本并在当前目录下创建 `NovelCopilot` 项目并完成安装）：
+   ```powershell
+   # 使用默认 GitHub 地址
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/edwinrealyyt/NovelCopilot/master/install.ps1" -UseBasicParsing).Content
+   
+   # 或者，如果国内网络访问 GitHub 缓慢，请使用加速镜像地址：
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; Invoke-Expression (Invoke-WebRequest -Uri "https://ghp.ci/https://raw.githubusercontent.com/edwinrealyyt/NovelCopilot/master/install.ps1" -UseBasicParsing).Content
+   ```
+2. 脚本会自动执行以下流程：
+   - 检测当前目录是否已存在源码。若无，自动从 GitHub 存储库下载最新源码包并解包至当前目录的 `NovelCopilot` 文件夹下。
+   - 自动检查并安装 Python 3 环境（若系统缺失，会通过 `winget` 或下载官方安装程序进行静默安装，无需管理员权限）。
+   - 在本地创建 `venv` 虚拟环境，并使用国内镜像源加速安装全部第三方依赖包。
+   - 在桌面生成 **NovelCopilot** 的双击启动快捷方式，并在安装目录下生成 `run.ps1` 启动脚本。
+3. 安装完成后，直接双击桌面上的 **NovelCopilot** 快捷方式即可开启服务。浏览器访问 `http://localhost:8000` 即可开始使用。
+
+
+#### 方法 B: 传统批处理极速启动
 直接双击运行目录下的 [run.bat](file:///C:/Users/Administrator/NovelCopilot/run.bat)。
 - 脚本会自动为您创建隔离虚拟环境 `venv`。
 - 安装必要的轻量级第三方依赖，并启动 FastAPI 服务。
 - 启动成功后，浏览器访问 `http://localhost:8000` 即可完全访问本系统。
+
 
 ### 2. 容器化一键部署 (CentOS / Arch Linux 生产环境)
 使用 Docker Compose 进行一键构建并拉起多模型 API 编排服务：
