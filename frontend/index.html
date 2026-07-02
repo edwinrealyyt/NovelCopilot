@@ -1170,7 +1170,7 @@
         }
 
         .toast {
-            background: rgba(20, 20, 30, 0.9);
+            background: var(--bg-surface-opaque);
             border: 1px solid var(--border-color);
             border-left: 4px solid var(--color-primary);
             border-radius: 8px;
@@ -1180,9 +1180,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: var(--glass-shadow);
             animation: slideIn 0.3s forwards;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
 
         .toast.success { border-left-color: var(--color-success); }
