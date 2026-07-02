@@ -1704,6 +1704,25 @@
             }
         }
 
+        // 获取当前使用的模型显示名称
+        function getActiveModelDisplayName() {
+            const currentBook = state.books.find(b => b.book_id === state.currentBookId);
+            let activeModelId = "";
+            if (currentBook && currentBook.settings) {
+                activeModelId = currentBook.settings.current_model;
+            }
+            
+            if (!activeModelId && state.availableModels.length > 0) {
+                activeModelId = state.availableModels[0].model_id;
+            }
+            
+            if (activeModelId) {
+                const found = state.availableModels.find(m => m.model_id === activeModelId);
+                return found ? found.display_name : activeModelId;
+            }
+            return "本地沙盒模拟器";
+        }
+
         // 初始化下拉单
         function initBookDropdown() {
             const selector = document.getElementById('book-selector');
@@ -1799,12 +1818,17 @@
                             <textarea id="new-synopsis" class="form-textarea" placeholder="介绍主角的金手指与主线爽点..."></textarea>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content: space-between; align-items:center;">
-                        <button class="btn-action secondary" onclick="openApiModal()">⚙️ 配置API Key</button>
-                        <button class="btn-submit" onclick="submitCreateBook()">
-                            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            智能规划并展示全部章节大纲
-                        </button>
+                    <div style="display:flex; justify-content: space-between; align-items:center; margin-top:20px; gap: 16px; flex-wrap: wrap;">
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color: var(--text-muted);">
+                            <span>🤖 当前规划引擎: <strong style="color: var(--color-primary);">${getActiveModelDisplayName()}</strong></span>
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <button class="btn-action secondary" style="min-width: 100px;" onclick="renderCurrentWorkspace()">取消/返回</button>
+                            <button class="btn-submit" onclick="submitCreateBook()">
+                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                智能规划并展示全部章节大纲
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
