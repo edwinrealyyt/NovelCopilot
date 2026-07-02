@@ -1369,6 +1369,37 @@
         let isFullStackMode = false;
         const API_BASE = "http://localhost:8000";
 
+        // 全局弹窗通知
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type !== 'info' ? type : ''}`.trim();
+
+            // 根据通知类型匹配对应的 Emoji 图标
+            let icon = '💡';
+            if (type === 'success') icon = '✨';
+            if (type === 'warning') icon = '⚠️';
+            if (type === 'error') icon = '❌';
+
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+
+            // 3秒后淡出并移除
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        container.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+
         let state = {
             books: [],
             currentBookId: null,
