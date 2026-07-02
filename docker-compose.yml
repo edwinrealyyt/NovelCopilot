@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  novel-copilot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novel_copilot_app
+    ports:
+      - "8000:8000"
+    volumes:
+      # 将本地数据文件挂载进入容器，确保大纲和正文持久化不丢失
+      - ./data.json:/app/data.json
+    environment:
+      - PORT=8000
+    restart: always

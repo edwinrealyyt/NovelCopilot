@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Novel Creation Copilot - 智能全栈小说创作辅助系统</title>
+    <!-- 引入高品质现代字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 基础过渡动画与阴影 */
+            --glow-primary: 0 0 15px rgba(0, 242, 254, 0.3);
+            --glow-secondary: 0 0 15px rgba(138, 43, 226, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            
+            --font-ui: 'Outfit', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+            --font-novel: 'Noto Serif SC', Georgia, serif;
+            --font-mono: 'Fira Code', Consolas, monospace;
+            
+            --color-success: #00e676;
+            --color-warning: #ff9100;
+            --color-danger: #ff5252;
+            --color-info: #00b0ff;
+        }
+
+        /* 1. 霓虹暗黑主题 (默认) */
+        body, body.theme-neon {
+            --bg-base: #0a0a0f;
+            --bg-surface: rgba(20, 20, 32, 0.65);
+            --bg-surface-opaque: #141420;
+            --bg-surface-hover: rgba(30, 30, 48, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.15);
+            --color-primary: #00f2fe;
+            --color-secondary: #8a2be2;
+            --text-main: #f5f5fa;
+            --text-muted: #8e8ea8;
+            --text-dark: #4b4b60;
+            --body-bg-gradient: radial-gradient(circle at 10% 20%, rgba(20, 10, 40, 0.4) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(10, 30, 50, 0.4) 0%, transparent 50%);
+        }
+
+        /* 2. 极客深蓝主题 */
+        body.theme-blue {
+            --bg-base: #080d1a;
+            --bg-surface: rgba(16, 26, 51, 0.65);
+            --bg-surface-opaque: #101a33;
+            --bg-surface-hover: rgba(26, 41, 77, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.15);
+            --color-primary: #0074d9;
+            --color-secondary: #00b0ff;
+            --text-main: #f4f6fa;
+            --text-muted: #738aad;
+            --text-dark: #3b4e6a;
+            --body-bg-gradient: radial-gradient(circle at 10% 20%, rgba(0, 80, 160, 0.25) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(10, 20, 50, 0.3) 0%, transparent 50%);
+        }
+
+        /* 3. 雅致纸墨主题 (浅色护眼) */
+        body.theme-paper {
+            --bg-base: #f5f5ee;
+            --bg-surface: rgba(255, 255, 255, 0.8);
+            --bg-surface-opaque: #ffffff;
+            --bg-surface-hover: rgba(240, 240, 230, 0.95);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-highlight: rgba(0, 0, 0, 0.15);
+            --color-primary: #5c6b73;
+            --color-secondary: #93b1a6;
+            --text-main: #2b2d42;
+            --text-muted: #6c757d;
+            --text-dark: #adb5bd;
+            --body-bg-gradient: none;
+        }
+
+        /* 4. 静谧森林主题 */
+        body.theme-forest {
+            --bg-base: #0a1410;
+            --bg-surface: rgba(20, 36, 28, 0.7);
+            --bg-surface-opaque: #14241c;
+            --bg-surface-hover: rgba(28, 51, 40, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.15);
+            --color-primary: #2ecc71;
+            --color-secondary: #27ae60;
+            --text-main: #e8f5e9;
+            --text-muted: #81c784;
+            --text-dark: #388e3c;
+            --body-bg-gradient: radial-gradient(circle at 10% 20%, rgba(46, 204, 113, 0.15) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(20, 40, 30, 0.3) 0%, transparent 50%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: var(--body-bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 布局容器 */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 磨砂玻璃面板基础样式 */
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* 左侧边栏 - 导航与书籍管理 */
+        .sidebar {
+            width: 320px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-surface-opaque);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--glow-primary);
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* 连接状态栏 */
+        .conn-status-bar {
+            padding: 4px 12px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        .conn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* 书籍选择与删除布局 */
+        .book-selector-container {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .book-select-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .book-select-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .book-select {
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            appearance: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .book-select:focus {
+            border-color: var(--color-primary);
+        }
+
+        .book-select-wrapper::after {
+            content: "▼";
+            font-size: 10px;
+            color: var(--text-muted);
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .btn-delete-book {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.25);
+            color: var(--color-danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-delete-book:hover {
+            background: var(--color-danger);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(255, 82, 82, 0.3);
+        }
+
+        .btn-new-book {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(to right, rgba(0, 242, 254, 0.1), rgba(138, 43, 226, 0.1));
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 8px;
+            color: var(--color-primary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-new-book:hover {
+            border-color: var(--color-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        /* 章节树状大纲目录 */
+        .outline-tree-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px 12px;
+        }
+
+        .tree-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding-left: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .volume-item {
+            margin-bottom: 16px;
+        }
+
+        .volume-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .volume-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .volume-icon {
+            margin-right: 8px;
+            transition: transform 0.2s;
+        }
+
+        .volume-item.collapsed .volume-icon {
+            transform: rotate(-90deg);
+        }
+
+        .chapter-list {
+            margin-left: 20px;
+            border-left: 1px solid var(--border-color);
+            padding-left: 6px;
+            overflow: hidden;
+        }
+
+        .volume-item.collapsed .chapter-list {
+            display: none;
+        }
+
+        .chapter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .chapter-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+        }
+
+        .chapter-item.active {
+            background: rgba(0, 242, 254, 0.08);
+            border-left: 3px solid var(--color-primary);
+            color: var(--text-main);
+            padding-left: 9px;
+        }
+
+        .chapter-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .status-pending { background-color: var(--color-warning); box-shadow: 0 0 6px var(--color-warning); }
+        .status-approved { background-color: var(--color-info); box-shadow: 0 0 6px var(--color-info); }
+        .status-completed { background-color: var(--color-success); box-shadow: 0 0 6px var(--color-success); }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            background: rgba(5, 5, 10, 0.2);
+        }
+
+        .btn-footer {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-footer:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex-grow: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 顶部元数据与进度条 */
+        .meta-header {
+            padding: 20px 32px;
+            background: rgba(12, 12, 20, 0.4);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .meta-title-area {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .meta-title {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .meta-badge {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--color-primary);
+        }
+
+        .meta-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 480px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .progress-stats-group {
+            display: flex;
+            gap: 32px;
+        }
+
+        .progress-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 180px;
+        }
+
+        .stat-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--color-primary), var(--color-info));
+            border-radius: 10px;
+            width: 0%;
+        }
+
+        .progress-bar-fill.secondary {
+            background: linear-gradient(to right, var(--color-secondary), var(--color-primary));
+        }
+
+        /* 核心业务容器面 */
+        .workspace-panel {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 新书创建面板样式 */
+        .create-book-card {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px;
+            width: 100%;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--color-primary);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+        }
+
+        /* 章节推进面板 */
+        .chapter-copilot-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            height: 100%;
+        }
+
+        .copilot-main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .copilot-side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .setting-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .inline-setting-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .inline-setting {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .inline-setting select {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 12px;
+            outline: none;
+        }
+
+        /* 状态A: 梗概确认框 (Pending) */
+        .outline-approve-box {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .outline-title-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-sub-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .outline-editor-textarea {
+            width: 100%;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .outline-editor-textarea:focus {
+            border-color: var(--color-primary);
+        }
+
+        .meta-estimate-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .estimate-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .estimate-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .estimate-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .estimate-val.highlight {
+            color: var(--color-warning);
+        }
+
+        .actions-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            border: none;
+            color: #fff;
+        }
+
+        .btn-action.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        /* 状态B: 正文编辑区 (Completed) */
+        .novel-editor-box {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            height: 520px;
+        }
+
+        .editor-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .editor-header-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .novel-textarea {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            padding: 24px;
+            color: var(--text-main);
+            font-family: var(--font-novel);
+            font-size: 17px;
+            line-height: 2.0;
+            resize: none;
+            outline: none;
+            overflow-y: auto;
+            letter-spacing: 0.5px;
+        }
+
+        /* 设定集悬浮卡 */
+        .panel-card {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .setting-tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .setting-chip:hover {
+            background: rgba(0, 242, 254, 0.06);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        /* 去AI化对比高亮 */
+        .de-ai-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .comparison-item {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .original-text {
+            color: var(--color-danger);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .replaced-text {
+            color: var(--color-success);
+            font-weight: 500;
+        }
+
+        /* 逻辑校验日志 */
+        .logic-check-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .logic-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--color-info);
+        }
+
+        .logic-item.warning {
+            border-left-color: var(--color-warning);
+            background: rgba(255, 145, 0, 0.04);
+        }
+
+        .logic-item.error {
+            border-left-color: var(--color-danger);
+            background: rgba(255, 82, 82, 0.04);
+        }
+
+        /* 全局大纲排期看板 */
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .board-volume-card {
+            padding: 20px;
+        }
+
+        .board-volume-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .board-chapters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .board-chapter-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .board-chapter-card:hover {
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .board-chapter-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-chapter-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 50px;
+        }
+
+        /* 排期节奏表 */
+        .timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .timeline-table th, .timeline-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .timeline-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* 模态弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            width: 480px;
+            padding: 32px;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        /* 动画加载器 */
+        .ai-generating-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.9);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .ai-generating-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .neon-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--color-primary);
+            border-bottom: 3px solid var(--color-secondary);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+            position: relative;
+        }
+
+        .neon-spinner::after {
+            content: "";
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            border: 3px solid transparent;
+            border-left: 3px solid var(--color-info);
+            border-right: 3px solid var(--color-success);
+            border-radius: 50%;
+            animation: spin-reverse 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 500;
+            background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .loading-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 标签导航 + 主题切换 */
+        .workspace-tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            background: rgba(12, 12, 20, 0.2);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tabs-btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .theme-selector-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-selector-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .theme-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .theme-dot.neon { background: #00f2fe; }
+        .theme-dot.blue { background: #0074d9; }
+        .theme-dot.paper { background: #5c6b73; }
+        .theme-dot.forest { background: #2ecc71; }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.3;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: rgba(20, 20, 30, 0.9);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: var(--text-main);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s forwards;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.success { border-left-color: var(--color-success); }
+        .toast.warning { border-left-color: var(--color-warning); }
+        .toast.error { border-left-color: var(--color-danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        #file-upload-input {
+            display: none;
+        }
+    </style>
+</head>
+<body class="theme-neon">
+    <div class="app-container">
+        
+        <!-- 左侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,13.62 19.5,15.14 18.7,16.4L17.2,14.9C17.7,14 18,13 18,12A6,6 0 0,0 12,6C11,6 10,6.3 9.1,6.8L7.6,5.3C8.86,4.5 10.38,4 12,4M12,8A4,4 0 0,1 16,12C16,12.72 15.81,13.4 15.47,14L13,11.53V9H11V9.53L8.53,7.06C9.13,6.4 9.97,6 11,6A4,4 0 0,1 12,8M12,10A2,2 0 0,1 14,12C14,12.33 13.91,12.64 13.76,12.9L9.1,8.24C9.36,8.09 9.67,8 10,8A2,2 0 0,1 12,10Z" />
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>Novel Copilot</h1>
+                    <span>AI Creation Assistant</span>
+                </div>
+            </div>
+
+            <!-- 连接状态栏 -->
+            <div class="conn-status-bar" id="conn-status-bar">
+                <div class="conn-dot" style="background-color: var(--color-warning);" id="conn-dot"></div>
+                <span id="conn-text">正在侦测后端服务...</span>
+            </div>
+
+            <!-- 书籍列表 (包含删除按钮) -->
+            <div class="book-selector-container">
+                <div class="book-select-row">
+                    <div class="book-select-wrapper">
+                        <select id="book-selector" class="book-select" onchange="switchBook(this.value)">
+                            <!-- 动态载入 -->
+                        </select>
+                    </div>
+                    <button class="btn-delete-book" onclick="triggerDeleteCurrentBook()" title="删除当前书籍项目">
+                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <button class="btn-new-book" onclick="showNewBookForm()">
+                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    创建新书籍项目
+                </button>
+            </div>
+
+            <!-- 章节树状大纲 -->
+            <div class="outline-tree-container">
+                <div class="tree-section-title">
+                    <span>小说卷章目录</span>
+                    <svg style="width: 12px; height: 12px; cursor: pointer;" fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="loadBookOutline()"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"></path></svg>
+                </div>
+                <div id="outline-tree">
+                    <!-- 动态载入章节树 -->
+                </div>
+            </div>
+
+            <!-- 侧栏尾部 -->
+            <div class="sidebar-footer">
+                <button class="btn-footer" onclick="triggerImport()">
+                    <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    导入数据
+                </button>
+                <button class="btn-footer" onclick="exportData()">
+                    <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    备份导出
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            
+            <!-- 顶部书籍元数据信息栏 -->
+            <header class="meta-header">
+                <div class="meta-title-area">
+                    <div class="meta-title-row">
+                        <span id="current-book-title" class="meta-title">未加载书籍</span>
+                        <span id="current-book-tags" class="meta-badge">无标签</span>
+                    </div>
+                    <span id="current-book-synopsis" class="meta-desc">请创建或选择一本书籍开始您的创作。</span>
+                </div>
+                <div class="progress-stats-group">
+                    <div class="progress-stat">
+                        <div class="stat-label-row">
+                            <span>预计总字数进度</span>
+                            <span id="word-progress-text">0 / 0 字</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="word-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="stat-label-row">
+                            <span>本卷章节进度</span>
+                            <span id="chapter-progress-text">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="chapter-progress-fill" class="progress-bar-fill secondary" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 导航Tab + 主题切换 -->
+            <nav class="workspace-tabs">
+                <div class="tabs-btn-group">
+                    <button id="tab-dashboard" class="tab-btn active" onclick="switchTab('dashboard')">工作台</button>
+                    <button id="tab-outline" class="tab-btn" onclick="switchTab('outline')">全景大纲看板</button>
+                    <button id="tab-scheduler" class="tab-btn" onclick="switchTab('scheduler')">节奏日更排期</button>
+                </div>
+                
+                <div class="theme-selector-group">
+                    <span class="theme-selector-label">切换主题:</span>
+                    <div class="theme-dot neon" onclick="setTheme('neon')" title="赛博霓虹"></div>
+                    <div class="theme-dot blue" onclick="setTheme('blue')" title="极客深蓝"></div>
+                    <div class="theme-dot paper" onclick="setTheme('paper')" title="雅致纸墨"></div>
+                    <div class="theme-dot forest" onclick="setTheme('forest')" title="静谧森林"></div>
+                </div>
+            </nav>
+
+            <!-- 核心面板工作区 -->
+            <div id="workspace-panel" class="workspace-panel">
+                <!-- 动态渲染内容 -->
+            </div>
+            
+            <!-- AI 生成中遮罩动效 -->
+            <div id="ai-loading-overlay" class="ai-generating-overlay">
+                <div class="neon-spinner"></div>
+                <div class="loading-text" id="ai-loading-title">智能创作正在生成中</div>
+                <div class="loading-subtext" id="ai-loading-subtitle">正在计算上下文，调用多模型路由策略...</div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- API Key 配置模态弹窗 -->
+    <div id="api-modal" class="modal-overlay">
+        <div class="modal-card glass-panel">
+            <h3 class="card-title">⚙️ API 配置中心</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                请输入您的 API Key 并点击发现可用模型。系统将根据 Key 自动拉取实际有权调用的底座模型列表。
+            </p>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">Gemini API Key</label>
+                <input type="password" id="key-gemini" class="form-input" placeholder="输入 AIzaSy 开头的密钥...">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">DeepSeek API Key</label>
+                <input type="password" id="key-deepseek" class="form-input" placeholder="输入 sk- 开头的密钥...">
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label class="form-label">Claude API Key</label>
+                <input type="password" id="key-claude" class="form-input" placeholder="输入 sk-ant- 开头的密钥...">
+            </div>
+            <div class="actions-row">
+                <button class="btn-action secondary" onclick="closeApiModal()">取消</button>
+                <button class="btn-action primary" onclick="saveApiKeys()">测试并保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗通知容器 -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- 隐式文件上传 -->
+    <input type="file" id="file-upload-input" accept=".json" onchange="handleFileImport(event)">
+
+    <!-- 业务逻辑脚本 -->
+    <script>
+        let isFullStackMode = false;
+        const API_BASE = "http://localhost:8000";
+
+        let state = {
+            books: [],
+            currentBookId: null,
+            activeTab: 'dashboard',
+            selectedChapterId: null,
+            selectedVolumeId: null,
+            apiKeys: { gemini: '', deepseek: '', claude: '' },
+            currentTheme: 'neon',
+            
+            // 动态可调用的模型列表 (修改意见: 不要预设，而是动态获取)
+            availableModels: [],
+            
+            activeDeAiChanges: [],
+            activeLogicReports: []
+        };
+
+        const LOCAL_SANDBOX_BOOKS = [
+            {
+                book_id: "book-1",
+                meta: {
+                    title: "天启之门",
+                    tags: ["科幻", "赛博朋克"],
+                    background: "在2085年的新东京，人类的记忆可以被打包成数字资产进行交易。然而，一个被称为“天启”的未知底层协议突然苏醒，所有被交易过的记忆都开始浮现同一句神秘的谶言。底层程序员林默在一次清理系统漏洞时，无意中下载了被删除的历史区，从而卷入了一场跨越时空的记忆战争。",
+                    synopsis: "一个在赛博霓虹下的程序员林默，无意间通过尘封的软盘下载了远古地球被抹除的一万年记忆，进而探索关于这个世界真实底层的惊天阴谋。",
+                    target_word_count: 120000,
+                    daily_update_words: 6000
+                },
+                outline: {
+                    volumes: [
+                        {
+                            volume_id: 1,
+                            volume_title: "第一卷：数据尘埃中的亡魂",
+                            volume_summary: "本卷讲述林默如何在废弃的垃圾站发现远古软盘，并解析出绝密记忆代码。",
+                            chapters: [
+                                {
+                                    chapter_id: 101,
+                                    title: "第一章：无用数据清理员",
+                                    summary: "林默扫描一个古老机械仓的磁介质遗留时，系统抛出了物理层未知编码软盘。",
+                                    status: "completed",
+                                    content: "当计算洪流在地下光纤中骤冷，林默睁开双眼。眼前没有了红色的追踪线，只剩生锈的管道。空气里浮着合成机油和陈旧的霉味，让人犯呕。\n\n“你醒了。”一个清冷的声音在耳畔响起。\n\n林默咬着牙爬起来，脖颈后方的神经插槽在突突直跳。他定睛一看，是一个皮衣洗得发白的姑娘盘腿在机箱上，那条用哑光碳纤维做的机械义肢有些扎眼。她轻轻敲击着那块旧软盘。\n\n“白雀？”林默问道。\n\n白雀微动目光：“能从三个仿生人‘猎犬’围剿里逃脱，还带出这数据，你倒是不简单。”"
+                                },
+                                {
+                                    chapter_id: 102,
+                                    title: "第二章：霓虹下的猎犬",
+                                    summary: "林默逃亡，过载芯片突破极客视界黑掉追踪网。",
+                                    status: "approved",
+                                    content: "冷雨打在风衣下摆。林默藏身在小巷深处，颈后插槽一片烫手。安全局的追兵猎犬已至小巷拐弯处，冰蓝色的红外探针穿透雨幕缓缓扫来..."
+                                },
+                                {
+                                    chapter_id: 103,
+                                    title: "第三章：超脑觉醒",
+                                    summary: "林默脑部数据融合，获得直视数字本源视角。",
+                                    status: "pending",
+                                    content: ""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                settings: {
+                    current_model: "",
+                    de_ai_level: "medium"
+                }
+            }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            loadLocalSettings();
+            applyTheme(state.currentTheme);
+            await checkBackendStatus();
+            await loadBooksData();
+            
+            // 自动发现实际可用大模型
+            await discoverAvailableModels();
+            
+            initBookDropdown();
+            renderBookMeta();
+            renderOutlineTree();
+            switchTab(state.activeTab);
+        });
+
+        // 切换主题
+        function setTheme(themeName) {
+            state.currentTheme = themeName;
+            applyTheme(themeName);
+            saveStateToStorage();
+            showToast(`主题已切换为: ${getThemeFriendlyName(themeName)}`);
+        }
+
+        function applyTheme(themeName) {
+            document.body.className = '';
+            document.body.classList.add(`theme-${themeName}`);
+        }
+
+        function getThemeFriendlyName(theme) {
+            switch(theme) {
+                case 'neon': return '赛博霓虹';
+                case 'blue': return '极客深蓝';
+                case 'paper': return '雅致纸墨';
+                case 'forest': return '静谧森林';
+                default: return theme;
+            }
+        }
+
+        // 检测后端
+        async function checkBackendStatus() {
+            const bar = document.getElementById('conn-status-bar');
+            const dot = document.getElementById('conn-dot');
+            const text = document.getElementById('conn-text');
+            
+            try {
+                const res = await fetch("/api/books", { method: 'GET' }).catch(() => fetch(`${API_BASE}/api/books`));
+                if (res.ok) {
+                    isFullStackMode = true;
+                    dot.style.backgroundColor = "var(--color-success)";
+                    text.innerText = "后端 FastAPI 接口连接正常 (全栈数据同步模式)";
+                } else {
+                    throw new Error("HTTP Status Error");
+                }
+            } catch(e) {
+                isFullStackMode = false;
+                dot.style.backgroundColor = "var(--color-warning)";
+                text.innerText = "降级为本地 Sandbox 沙盒模式 (脱机运行)";
+            }
+        }
+
+        // 获取并加载大模型列表 (动态发现)
+        async function discoverAvailableModels() {
+            const payload = {
+                gemini: state.apiKeys.gemini || "",
+                deepseek: state.apiKeys.deepseek || "",
+                claude: state.apiKeys.claude || ""
+            };
+
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch("/api/models/discover", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(() => fetch(`${API_BASE}/api/models/discover`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }));
+                    
+                    if (res.ok) {
+                        state.availableModels = await res.json();
+                        // 修正当前书籍模型选项
+                        const book = state.books.find(b => b.book_id === state.currentBookId);
+                        if (book && state.availableModels.length > 0) {
+                            const exists = state.availableModels.some(m => m.model_id === book.settings.current_model);
+                            if (!exists) {
+                                book.settings.current_model = state.availableModels[0].model_id;
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.error("无法动态拉取可用模型", e);
+                }
+            } else {
+                // Sandbox 脱机模式下的模型发现模拟
+                state.availableModels = [];
+                if (payload.gemini) {
+                    state.availableModels.push(
+                        { provider: "gemini", model_id: "gemini-1.5-pro", display_name: "Gemini - 1.5 Pro (模拟)" },
+                        { provider: "gemini", model_id: "gemini-1.5-flash", display_name: "Gemini - 1.5 Flash (模拟)" }
+                    );
+                }
+                if (payload.deepseek) {
+                    state.availableModels.push(
+                        { provider: "deepseek", model_id: "deepseek-coder", display_name: "DeepSeek - Coder (模拟)" },
+                        { provider: "deepseek", model_id: "deepseek-chat", display_name: "DeepSeek - Chat (模拟)" }
+                    );
+                }
+                
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                if (book && state.availableModels.length > 0) {
+                    const exists = state.availableModels.some(m => m.model_id === book.settings.current_model);
+                    if (!exists) {
+                        book.settings.current_model = state.availableModels[0].model_id;
+                    }
+                }
+            }
+        }
+
+        // 加载书籍数据
+        async function loadBooksData() {
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch("/api/books").catch(() => fetch(`${API_BASE}/api/books`));
+                    const list = await res.json();
+                    
+                    state.books = [];
+                    for (let item of list) {
+                        const bookRes = await fetch(`/api/books/${item.book_id}`).catch(() => fetch(`${API_BASE}/api/books/${item.book_id}`));
+                        const bookDetail = await bookRes.json();
+                        state.books.push(bookDetail);
+                    }
+                    
+                    if (state.books.length > 0) {
+                        state.currentBookId = state.books[0].book_id;
+                        state.selectedVolumeId = state.books[0].outline.volumes[0].volume_id;
+                        state.selectedChapterId = state.books[0].outline.volumes[0].chapters[0].chapter_id;
+                    }
+                } catch(err) {
+                    showToast("后端数据载入出错: " + err.message, "error");
+                }
+            } else {
+                const saved = localStorage.getItem('novel_copilot_state');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        state.books = parsed.books || LOCAL_SANDBOX_BOOKS;
+                        state.currentBookId = parsed.currentBookId || "book-1";
+                    } catch(e) {
+                        state.books = LOCAL_SANDBOX_BOOKS;
+                        state.currentBookId = "book-1";
+                    }
+                } else {
+                    state.books = LOCAL_SANDBOX_BOOKS;
+                    state.currentBookId = "book-1";
+                }
+                
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                if (book && book.outline.volumes.length > 0) {
+                    state.selectedVolumeId = book.outline.volumes[0].volume_id;
+                    state.selectedChapterId = book.outline.volumes[0].chapters[0].chapter_id;
+                }
+            }
+        }
+
+        // 状态保存
+        function saveStateToStorage() {
+            localStorage.setItem('novel_copilot_state', JSON.stringify({
+                books: state.books,
+                currentBookId: state.currentBookId,
+                apiKeys: state.apiKeys,
+                currentTheme: state.currentTheme
+            }));
+        }
+
+        function loadLocalSettings() {
+            const saved = localStorage.getItem('novel_copilot_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state.apiKeys = parsed.apiKeys || { gemini: '', deepseek: '', claude: '' };
+                    state.currentTheme = parsed.currentTheme || 'neon';
+                } catch(e) {}
+            }
+        }
+
+        // 删除当前书籍项目
+        async function triggerDeleteCurrentBook() {
+            if (!state.currentBookId) {
+                showToast("当前没有可删除的书籍", "warning");
+                return;
+            }
+
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (!confirm(`⚠️ 警告: 您确定要删除书籍《${book.meta.title}》吗？该操作不可撤销，对应的全部大纲及已生成正文都将被永久删除。`)) {
+                return;
+            }
+
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}`, {
+                        method: 'DELETE'
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}`, {
+                        method: 'DELETE'
+                    }));
+                    
+                    if (res.ok) {
+                        showToast(`书籍《${book.meta.title}》已成功删除。`);
+                    } else {
+                        throw new Error("HTTP Status Error");
+                    }
+                } catch(e) {
+                    showToast("删除书籍失败: " + e.message, "error");
+                    return;
+                }
+            } else {
+                state.books = state.books.filter(b => b.book_id !== state.currentBookId);
+                saveStateToStorage();
+                showToast(`书籍《${book.meta.title}》已从本地缓存中删除。`);
+            }
+
+            await loadBooksData();
+            
+            if (state.books.length > 0) {
+                switchBook(state.books[0].book_id);
+            } else {
+                state.currentBookId = null;
+                state.selectedVolumeId = null;
+                state.selectedChapterId = null;
+                initBookDropdown();
+                renderBookMeta();
+                renderOutlineTree();
+                showNewBookForm();
+            }
+        }
+
+        // 初始化下拉单
+        function initBookDropdown() {
+            const selector = document.getElementById('book-selector');
+            selector.innerHTML = '';
+            
+            if (state.books.length === 0) {
+                const opt = document.createElement('option');
+                opt.innerText = "-- 暂无书籍 --";
+                selector.appendChild(opt);
+                return;
+            }
+
+            state.books.forEach(book => {
+                const opt = document.createElement('option');
+                opt.value = book.book_id;
+                opt.innerText = book.meta.title;
+                if (book.book_id === state.currentBookId) {
+                    opt.selected = true;
+                }
+                selector.appendChild(opt);
+            });
+        }
+
+        // 切换书籍
+        async function switchBook(bookId) {
+            state.currentBookId = bookId;
+            let book = state.books.find(b => b.book_id === bookId);
+            
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${bookId}`).catch(() => fetch(`${API_BASE}/api/books/${bookId}`));
+                    book = await res.json();
+                    const idx = state.books.findIndex(b => b.book_id === bookId);
+                    if (idx !== -1) state.books[idx] = book;
+                } catch(err) {
+                    showToast("拉取书籍详情失败", "error");
+                }
+            }
+
+            if (book && book.outline.volumes.length > 0) {
+                state.selectedVolumeId = book.outline.volumes[0].volume_id;
+                if (book.outline.volumes[0].chapters.length > 0) {
+                    state.selectedChapterId = book.outline.volumes[0].chapters[0].chapter_id;
+                } else {
+                    state.selectedChapterId = null;
+                }
+            }
+            
+            saveStateToStorage();
+            renderBookMeta();
+            renderOutlineTree();
+            renderCurrentWorkspace();
+            showToast(`已切换至书籍《${book ? book.meta.title : ''}》`);
+        }
+
+        // 新建书籍
+        function showNewBookForm() {
+            state.activeTab = 'dashboard';
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-dashboard').classList.add('active');
+            
+            const panel = document.getElementById('workspace-panel');
+            panel.innerHTML = `
+                <div class="create-book-card glass-panel">
+                    <h3 class="card-title">
+                        <svg style="width:24px; height:24px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        创建全新小说创作沙盒
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">书籍名称</label>
+                            <input type="text" id="new-title" class="form-input" placeholder="输入书名，如《我的赛博农场》...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">类型标签 (以英文逗号隔开)</label>
+                            <input type="text" id="new-tags" class="form-input" placeholder="如：科幻, 赛博朋克">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">预计总字数 (字)</label>
+                            <input type="number" id="new-target-words" class="form-input" value="120000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">预计日更量 (字)</label>
+                            <input type="number" id="new-daily-words" class="form-input" value="6000">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">世界观设定背景</label>
+                            <textarea id="new-background" class="form-textarea" placeholder="描述体系架构和主要矛盾..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">核心简介</label>
+                            <textarea id="new-synopsis" class="form-textarea" placeholder="介绍主角的金手指与主线爽点..."></textarea>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;">
+                        <button class="btn-action secondary" onclick="openApiModal()">⚙️ 配置API Key</button>
+                        <button class="btn-submit" onclick="submitCreateBook()">
+                            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            智能规划并展示全部章节大纲
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 提交创建书籍
+        async function submitCreateBook() {
+            const title = document.getElementById('new-title').value.trim();
+            const tagsInput = document.getElementById('new-tags').value.trim();
+            const targetWords = parseInt(document.getElementById('new-target-words').value) || 120000;
+            const dailyWords = parseInt(document.getElementById('new-daily-words').value) || 6000;
+            const background = document.getElementById('new-background').value.trim();
+            const synopsis = document.getElementById('new-synopsis').value.trim();
+
+            if (!title) {
+                showToast("书籍名称不能为空！", "error");
+                return;
+            }
+
+            const overlay = document.getElementById('ai-loading-overlay');
+            overlay.classList.add('active');
+
+            const payload = {
+                title,
+                tags: tagsInput ? tagsInput.split(',').map(t => t.trim()) : ["未分类"],
+                background,
+                synopsis,
+                target_word_count: targetWords,
+                daily_update_words: dailyWords
+            };
+
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch("/api/books", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(() => fetch(`${API_BASE}/api/books`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }));
+
+                    const book = await res.json();
+                    state.books.push(book);
+                    state.currentBookId = book.book_id;
+                    state.selectedVolumeId = book.outline.volumes[0].volume_id;
+                    state.selectedChapterId = book.outline.volumes[0].chapters[0].chapter_id;
+                    
+                    showToast(`全栈书籍《${title}》全部卷章已生成并显示完毕！`);
+                } catch(err) {
+                    showToast("后端创建新书失败: " + err.message, "error");
+                } finally {
+                    overlay.classList.remove('active');
+                }
+            } else {
+                setTimeout(() => {
+                    const book_id = "book-" + Date.now();
+                    const totalChapters = Math.max(1, Math.floor(targetWords / 3000));
+                    
+                    let chaptersPerVolume = 10;
+                    if (totalChapters <= 10) chaptersPerVolume = 5;
+                    else if (totalChapters > 30) chaptersPerVolume = 15;
+                    
+                    const numVolumes = Math.ceil(totalChapters / chaptersPerVolume);
+                    const volumes = [];
+                    let globalIdx = 1;
+
+                    for (let v = 1; v <= numVolumes; v++) {
+                        const volChapters = [];
+                        const startCh = globalIdx;
+                        
+                        let currentVolChaptersCount = chaptersPerVolume;
+                        if (v === numVolumes) {
+                            currentVolChaptersCount = totalChapters - ((v - 1) * chaptersPerVolume);
+                        }
+
+                        for (let c = 1; c <= currentVolChaptersCount; c++) {
+                            const cNum = globalIdx;
+                            let chTitle = `第${cNum}章：剧情过渡与修行磨砺`;
+                            let chSummary = `本章中主角将面临新的磨炼与配角之间的博弈，逐渐累积底牌。`;
+                            
+                            if (cNum === 1) {
+                                chTitle = "第一章：突如其来的变故";
+                                chSummary = "交代设定与初始危机，金手指唤醒。";
+                            } else if (cNum === 2) {
+                                chTitle = "第二章：破釜沉舟的修行";
+                                chSummary = "主角调试并熟悉金手指，提升实力打脸前期配角。";
+                            }
+
+                            volChapters.push({
+                                chapter_id: v * 100 + c,
+                                title: chTitle,
+                                summary: chSummary,
+                                status: "pending",
+                                content: ""
+                            });
+                            globalIdx++;
+                        }
+
+                        volumes.push({
+                            volume_id: v,
+                            volume_title: `第${v}卷：探索与推进期`,
+                            volume_summary: `本卷包含第 ${startCh} 章至第 ${globalIdx - 1} 章。`,
+                            chapters: volChapters
+                        });
+                    }
+
+                    const newBook = {
+                        book_id,
+                        meta: payload,
+                        outline: { volumes },
+                        settings: { current_model: "", de_ai_level: "medium" }
+                    };
+
+                    state.books.push(newBook);
+                    state.currentBookId = book_id;
+                    state.selectedVolumeId = 1;
+                    state.selectedChapterId = 101;
+                    
+                    saveStateToStorage();
+                    showToast(`本地 Sandbox 书籍《${title}》卷章已显示！`);
+                    overlay.classList.remove('active');
+                    finishBookCreationUI();
+                }, 2000);
+                return;
+            }
+
+            finishBookCreationUI();
+        }
+
+        function finishBookCreationUI() {
+            initBookDropdown();
+            renderBookMeta();
+            renderOutlineTree();
+            switchTab('dashboard');
+        }
+
+        // 渲染元数据
+        function renderBookMeta() {
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (!book) {
+                document.getElementById('current-book-title').innerText = "未加载书籍";
+                document.getElementById('current-book-tags').innerText = "无标签";
+                document.getElementById('current-book-synopsis').innerText = "请创建或选择一本书籍。";
+                updateProgress(0, 0, 0, 0, 0, 0);
+                return;
+            }
+
+            document.getElementById('current-book-title').innerText = book.meta.title;
+            document.getElementById('current-book-tags').innerText = book.meta.tags.join(' / ');
+            document.getElementById('current-book-synopsis').innerText = book.meta.synopsis || "暂无简介";
+
+            let currentWords = 0;
+            let totalChapters = 0;
+            let completedChapters = 0;
+
+            book.outline.volumes.forEach(vol => {
+                vol.chapters.forEach(ch => {
+                    totalChapters++;
+                    if (ch.status === 'completed') {
+                        completedChapters++;
+                        currentWords += ch.content ? ch.content.length : 0;
+                    }
+                });
+            });
+
+            const wordPercent = book.meta.target_word_count > 0 ? (currentWords / book.meta.target_word_count) * 100 : 0;
+            const chapterPercent = totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+
+            updateProgress(currentWords, book.meta.target_word_count, wordPercent, completedChapters, totalChapters, chapterPercent);
+        }
+
+        function updateProgress(currWords, targetWords, wordPercent, compChaps, totalChaps, chapPercent) {
+            document.getElementById('word-progress-text').innerText = `${currWords.toLocaleString()} / ${targetWords.toLocaleString()} 字`;
+            document.getElementById('word-progress-fill').style.width = `${Math.min(wordPercent, 100)}%`;
+            
+            document.getElementById('chapter-progress-text').innerText = `${compChaps} / ${totalChaps} 章 (${Math.round(chapPercent)}%)`;
+            document.getElementById('chapter-progress-fill').style.width = `${Math.min(chapPercent, 100)}%`;
+        }
+
+        // 大纲刷新
+        async function loadBookOutline() {
+            if (!state.currentBookId) return;
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}`).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}`));
+                    const book = await res.json();
+                    const idx = state.books.findIndex(b => b.book_id === state.currentBookId);
+                    if (idx !== -1) {
+                        state.books[idx] = book;
+                        renderOutlineTree();
+                        renderBookMeta();
+                        renderCurrentWorkspace();
+                        showToast("大纲数据已从后端刷新！");
+                    }
+                } catch(e) {
+                    showToast("同步大纲失败", "error");
+                }
+            }
+        }
+
+        // 渲染树
+        function renderOutlineTree() {
+            const treeContainer = document.getElementById('outline-tree');
+            treeContainer.innerHTML = '';
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (!book || !book.outline.volumes) {
+                treeContainer.innerHTML = '<div class="empty-state">暂无章节结构</div>';
+                return;
+            }
+
+            book.outline.volumes.forEach(vol => {
+                const volDiv = document.createElement('div');
+                volDiv.className = 'volume-item';
+                
+                const header = document.createElement('div');
+                header.className = 'volume-header';
+                header.innerHTML = `
+                    <span class="volume-icon">▼</span>
+                    <span>${vol.volume_title}</span>
+                `;
+                
+                header.onclick = () => {
+                    volDiv.classList.toggle('collapsed');
+                    header.querySelector('.volume-icon').innerText = volDiv.classList.contains('collapsed') ? "▶" : "▼";
+                };
+
+                const chList = document.createElement('div');
+                chList.className = 'chapter-list';
+
+                vol.chapters.forEach(ch => {
+                    const chItem = document.createElement('div');
+                    chItem.className = `chapter-item ${ch.chapter_id === state.selectedChapterId ? 'active' : ''}`;
+                    chItem.innerHTML = `
+                        <span>${ch.title}</span>
+                        <div class="chapter-status-dot status-${ch.status}"></div>
+                    `;
+
+                    chItem.onclick = (e) => {
+                        e.stopPropagation();
+                        selectChapter(vol.volume_id, ch.chapter_id);
+                    };
+
+                    chList.appendChild(chItem);
+                });
+
+                volDiv.appendChild(header);
+                volDiv.appendChild(chList);
+                treeContainer.appendChild(volDiv);
+            });
+        }
+
+        function selectChapter(volumeId, chapterId) {
+            state.selectedVolumeId = volumeId;
+            state.selectedChapterId = chapterId;
+            saveStateToStorage();
+            
+            const items = document.querySelectorAll('.chapter-item');
+            items.forEach(it => it.classList.remove('active'));
+            
+            renderOutlineTree();
+            
+            if (state.activeTab !== 'dashboard') {
+                switchTab('dashboard');
+            } else {
+                renderCurrentWorkspace();
+            }
+        }
+
+        // 切换导航Tab
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(t => {
+                if (t.id === `tab-${tabId}`) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+
+            renderCurrentWorkspace();
+        }
+
+        // 渲染主工作区
+        function renderCurrentWorkspace() {
+            const panel = document.getElementById('workspace-panel');
+            panel.innerHTML = '';
+
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (!book) {
+                panel.innerHTML = `
+                    <div class="glass-panel empty-state">
+                        <h3>欢迎来到 AI Novel Creation Copilot</h3>
+                        <p>请点击左下角“创建新书籍项目”或导入已有的 JSON 备份开始。</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (state.activeTab === 'dashboard') {
+                renderDashboard(panel, book);
+            } else if (state.activeTab === 'outline') {
+                renderOutlineBoard(panel, book);
+            } else if (state.activeTab === 'scheduler') {
+                renderSchedulerTable(panel, book);
+            }
+        }
+
+        // 渲染工作台 (包含对动态可用模型的读取渲染)
+        function renderDashboard(container, book) {
+            if (!state.selectedChapterId) {
+                container.innerHTML = `<div class="glass-panel empty-state"><p>💡 请在左侧目录树中选择一个要编辑或推进的章节。</p></div>`;
+                return;
+            }
+
+            const volume = book.outline.volumes.find(v => v.volume_id === state.selectedVolumeId);
+            const chapter = volume ? volume.chapters.find(c => c.chapter_id === state.selectedChapterId) : null;
+
+            if (!chapter) {
+                container.innerHTML = `<div class="glass-panel empty-state"><p>未找到章节数据。</p></div>`;
+                return;
+            }
+
+            const dashboardGrid = document.createElement('div');
+            dashboardGrid.className = 'chapter-copilot-container';
+
+            const leftCol = document.createElement('div');
+            leftCol.className = 'copilot-main-panel';
+
+            // 动态大模型下拉列表渲染 (若没有可用模型显示空备选项并降级 sandbox 模拟器)
+            let modelSelectHtml = "";
+            if (state.availableModels.length === 0) {
+                modelSelectHtml = `<option value="">无可用大模型 (自动开启本地沙盒模拟器)</option>`;
+            } else {
+                modelSelectHtml = state.availableModels.map(m => `
+                    <option value="${m.model_id}" ${book.settings.current_model === m.model_id ? 'selected' : ''}>
+                        ${m.display_name}
+                    </option>
+                `).join('');
+            }
+
+            // 设置栏
+            const settingCard = document.createElement('div');
+            settingCard.className = 'glass-panel setting-bar';
+            settingCard.innerHTML = `
+                <div class="inline-setting-group">
+                    <div class="inline-setting">
+                        <span>可用大模型选择：</span>
+                        <select id="model-select" onchange="updateBookSetting('current_model', this.value)">
+                            ${modelSelectHtml}
+                        </select>
+                    </div>
+                    <div class="inline-setting">
+                        <span>去AI词汇级别：</span>
+                        <select id="de-ai-select" onchange="updateBookSetting('de_ai_level', this.value)">
+                            <option value="low" ${book.settings.de_ai_level === 'low' ? 'selected' : ''}>低 (仅替换极其刺耳的套话)</option>
+                            <option value="medium" ${book.settings.de_ai_level === 'medium' ? 'selected' : ''}>中 (语义平实化与白描拟人类)</option>
+                            <option value="high" ${book.settings.de_ai_level === 'high' ? 'selected' : ''}>高 (极致去套词、句式重构)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-footer" style="padding: 4px 10px; font-size:11px" onclick="openApiModal()">⚙️ 获取/配置模型 API</button>
+            `;
+            leftCol.appendChild(settingCard);
+
+            if (chapter.status === 'pending') {
+                const approveCard = document.createElement('div');
+                approveCard.className = 'glass-panel outline-approve-box';
+                
+                const ctxText = book.meta.background + book.meta.synopsis + volume.volume_summary + chapter.summary;
+                const estInput = Math.round(ctxText.length * 1.3);
+                const estOutput = 3500;
+                
+                // 人民币计价计算 (1 USD = 7.25 CNY)
+                const rate = getModelRateCNY(book.settings.current_model);
+                let estCostRmb = (estInput * rate.input + estOutput * rate.output) / 1000000.0;
+                
+                approveCard.innerHTML = `
+                    <div class="outline-title-input-wrapper">
+                        <span class="section-sub-title">当前章节标题</span>
+                        <input type="text" id="edit-chapter-title" class="form-input" value="${chapter.title}" style="font-size:16px; font-weight:600;">
+                    </div>
+                    
+                    <div class="outline-title-input-wrapper">
+                        <span class="section-sub-title">章节详细梗概（核心矛盾与出场人物）</span>
+                        <textarea id="edit-chapter-summary" class="outline-editor-textarea">${chapter.summary}</textarea>
+                    </div>
+
+                    <div class="meta-estimate-box">
+                        <div class="estimate-item">
+                            <span class="estimate-label">预估上下文输入</span>
+                            <span class="estimate-val" id="est-input-tokens">${estInput} Tokens</span>
+                        </div>
+                        <div class="estimate-item">
+                            <span class="estimate-label">预计输出正文</span>
+                            <span class="estimate-val" id="est-output-tokens">${estOutput} Tokens</span>
+                        </div>
+                        <div class="estimate-item">
+                            <span class="estimate-label">本次生成预估费用</span>
+                            <span class="estimate-val highlight" id="est-cost">¥${estCostRmb.toFixed(4)}</span>
+                        </div>
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn-action secondary" onclick="approveOutlineOnly()">仅确认大纲，不生成正文</button>
+                        <button class="btn-action primary" onclick="generateChapterBody(${volume.volume_id}, ${chapter.chapter_id})">
+                            <svg style="width:14px; height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            确认大纲，智能撰写正文
+                        </button>
+                    </div>
+                `;
+                leftCol.appendChild(approveCard);
+                
+                triggerAsyncEstimate(book.settings.current_model, ctxText);
+                
+            } else {
+                const editorCard = document.createElement('div');
+                editorCard.className = 'glass-panel novel-editor-box';
+                editorCard.innerHTML = `
+                    <div class="editor-header">
+                        <div class="editor-header-title">
+                            📝 ${chapter.title} <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:12px;">已生成正文（${chapter.content ? chapter.content.length : 0} 字）</span>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-footer" style="padding: 4px 8px; font-size:11px" onclick="revertToPending(${volume.volume_id}, ${chapter.chapter_id})">修改大纲梗概</button>
+                            <button class="btn-footer" style="padding: 4px 8px; font-size:11px" onclick="saveNovelText(${volume.volume_id}, ${chapter.chapter_id})">保存正文</button>
+                        </div>
+                    </div>
+                    <textarea id="novel-body-editor" class="novel-textarea">${chapter.content || ''}</textarea>
+                `;
+                leftCol.appendChild(editorCard);
+            }
+
+            dashboardGrid.appendChild(leftCol);
+
+            const rightCol = document.createElement('div');
+            rightCol.className = 'copilot-side-panel';
+
+            // 判定当前是否有有效的 API Key 并且已发现可调用模型
+            const hasActiveApiKey = (state.apiKeys.gemini || state.apiKeys.deepseek || state.apiKeys.claude) && state.availableModels.length > 0;
+
+            // 1. 去AI痕迹消除
+            const deAiCard = document.createElement('div');
+            deAiCard.className = 'glass-panel panel-card';
+            
+            let changesHtml = `<div class="empty-state" style="padding:10px;">暂无生成正文，无痕迹分析</div>`;
+            if (chapter.content) {
+                if (!hasActiveApiKey && !isFullStackMode) {
+                    changesHtml = `
+                        <div class="empty-state" style="padding: 20px 10px;">
+                            <span style="color: var(--color-warning); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">⚠️ 处于离线沙盒模式</span>
+                            <span style="font-size: 11px; line-height: 1.4;">未检测到可用大模型。配置有效 API Key 后，即可在此执行真实的 AI 腔调消除及拟人类段落润色。</span>
+                        </div>
+                    `;
+                } else if (state.activeDeAiChanges.length > 0) {
+                    changesHtml = state.activeDeAiChanges.map(c => `
+                        <div class="comparison-item">
+                            <div class="original-text">AI套词: "${c.original}"</div>
+                            <div class="replaced-text">拟人化为: "${c.replacement}"</div>
+                        </div>
+                    `).join('');
+                } else {
+                    changesHtml = `<div style="font-size:12px; color:var(--color-success); text-align:center; padding:10px;">🎉 未检测到AI高频空套词。</div>`;
+                }
+            }
+
+            deAiCard.innerHTML = `
+                <div class="panel-card-title">
+                    <span>✨ AI 痕迹消除与优化</span>
+                </div>
+                <div class="de-ai-comparison" id="de-ai-visualizer">
+                    ${changesHtml}
+                </div>
+                <button class="btn-footer" style="width:100%; font-weight:600;" onclick="triggerDeAiProcess(${volume.volume_id}, ${chapter.chapter_id})">
+                    执行极度去AI套路词润色
+                </button>
+            `;
+            rightCol.appendChild(deAiCard);
+
+            // 2. 逻辑校验报告
+            const logicCard = document.createElement('div');
+            logicCard.className = 'glass-panel panel-card';
+            
+            let reportsHtml = `<div class="logic-item info"><span>未进行逻辑一致性检测</span></div>`;
+            if (chapter.content) {
+                if (!hasActiveApiKey && !isFullStackMode) {
+                    reportsHtml = `
+                        <div class="logic-item warning" style="border-left-color: var(--color-warning); background: rgba(255, 145, 0, 0.04);">
+                            <span style="font-weight:600;">[OFFLINE]</span>
+                            <span>当前为离线沙盒状态，未激活大模型一致性校验。激活 API 密钥后，系统即可实时评估空间矛盾与性格偏离。</span>
+                        </div>
+                    `;
+                } else if (state.activeLogicReports.length > 0) {
+                    reportsHtml = state.activeLogicReports.map(r => `
+                        <div class="logic-item ${r.level}">
+                            <span style="font-weight:600;">[${r.level.toUpperCase()}]</span>
+                            <span>${r.text}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    reportsHtml = `<div class="logic-item info"><span>设定校验通过，未发现冲突！</span></div>`;
+                }
+            }
+
+            logicCard.innerHTML = `
+                <div class="panel-card-title">
+                    <span>🔍 逻辑设定及OOC校验</span>
+                </div>
+                <div class="logic-check-list" id="logic-checker-list">
+                    ${reportsHtml}
+                </div>
+            `;
+            rightCol.appendChild(logicCard);
+
+            // 3. 设定集速查
+            const settingsQuickCard = document.createElement('div');
+            settingsQuickCard.className = 'glass-panel panel-card';
+            settingsQuickCard.innerHTML = `
+                <div class="panel-card-title">
+                    <span>💡 当前关联设定集</span>
+                </div>
+                <div class="setting-tag-container">
+                    <span class="setting-chip">林默 (主角/数据清理员)</span>
+                    <span class="setting-chip">白雀 (女主/方舟极客)</span>
+                    <span class="setting-chip">神代重工 (垄断巨头)</span>
+                    <span class="setting-chip">天启之门 (底层协议)</span>
+                    <span class="setting-chip">第十三区 (贫民窟)</span>
+                </div>
+            `;
+            rightCol.appendChild(settingsQuickCard);
+
+            dashboardGrid.appendChild(rightCol);
+            container.appendChild(dashboardGrid);
+        }
+
+        // 大纲看板
+        function renderOutlineBoard(container, book) {
+            const boardContainer = document.createElement('div');
+            boardContainer.className = 'board-container';
+
+            book.outline.volumes.forEach(vol => {
+                const volCard = document.createElement('div');
+                volCard.className = 'glass-panel board-volume-card';
+                volCard.innerHTML = `
+                    <div class="board-volume-header">
+                        <h4 style="font-size:16px; font-weight:700;">${vol.volume_title}</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">${vol.chapters.length} 个章节</span>
+                    </div>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">${vol.volume_summary}</p>
+                    <div class="board-chapters-grid">
+                        ${vol.chapters.map(ch => `
+                            <div class="board-chapter-card" onclick="selectChapter(${vol.volume_id}, ${ch.chapter_id})">
+                                <div class="board-chapter-title">
+                                    <span>${ch.title}</span>
+                                    <div class="chapter-status-dot status-${ch.status}"></div>
+                                </div>
+                                <div class="board-chapter-desc">${ch.summary || '无章节大纲描述。'}</div>
+                                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                                    <span>状态: ${ch.status.toUpperCase()}</span>
+                                    <span>${ch.content ? ch.content.length : 0} 字</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                boardContainer.appendChild(volCard);
+            });
+
+            container.appendChild(boardContainer);
+        }
+
+        // 排期看板
+        function renderSchedulerTable(container, book) {
+            const schedulerCard = document.createElement('div');
+            schedulerCard.className = 'glass-panel';
+            schedulerCard.style.padding = '24px';
+            
+            const daily = book.meta.daily_update_words;
+            let currentDay = 1;
+
+            let tableHtml = `
+                <h4 class="card-title" style="margin-bottom:16px;">📅 小说日更与排期推进节点</h4>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">
+                    系统依据日更字数 [${daily} 字] 及章节大纲，自动排期如下：
+                </p>
+                <table class="timeline-table">
+                    <thead>
+                        <tr>
+                            <th>更文天数</th>
+                            <th>卷别章节</th>
+                            <th>核心推进目标</th>
+                            <th>预估字数</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            book.outline.volumes.forEach(vol => {
+                vol.chapters.forEach(ch => {
+                    const estWords = ch.content ? ch.content.length : 3000;
+                    const daysNeed = (estWords / daily).toFixed(1);
+                    tableHtml += `
+                        <tr>
+                            <td>第 ${currentDay} 天 (需更 ${daysNeed} 天)</td>
+                            <td style="font-weight:600;">${ch.title}</td>
+                            <td>${ch.summary}</td>
+                            <td>${estWords} 字</td>
+                            <td><span class="chapter-status-dot status-${ch.status}" style="display:inline-block; margin-right:6px;"></span>${ch.status.toUpperCase()}</td>
+                        </tr>
+                    `;
+                    currentDay += Math.ceil(estWords / daily);
+                });
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            schedulerCard.innerHTML = tableHtml;
+            container.appendChild(schedulerCard);
+        }
+
+        // 异步Token及计费评估 (CNY)
+        async function triggerAsyncEstimate(model, inputText) {
+            if (isFullStackMode && model) {
+                try {
+                    const res = await fetch(`/api/estimate?model=${model}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ input_text: inputText })
+                    }).catch(() => fetch(`${API_BASE}/api/estimate?model=${model}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ input_text: inputText })
+                    }));
+                    
+                    const est = await res.json();
+                    const costCny = est.estimated_cost_usd; 
+                    
+                    document.getElementById('est-input-tokens').innerText = `${est.input_tokens} Tokens`;
+                    document.getElementById('est-output-tokens').innerText = `${est.output_tokens} Tokens`;
+                    document.getElementById('est-cost').innerText = `¥${costCny.toFixed(4)}`;
+                } catch(e) {
+                    console.error("Token估算失败", e);
+                }
+            }
+        }
+
+        // 获取人民币模型费率 (CNY / 1M Tokens)
+        function getModelRateCNY(model) {
+            if (!model) return { input: 0.0, output: 0.0 };
+            const m = model.toLowerCase();
+            if (m.includes('pro')) return { input: 50.75, output: 152.25 };
+            if (m.includes('flash')) return { input: 10.88, output: 32.63 };
+            if (m.includes('sonnet')) return { input: 21.75, output: 108.75 };
+            if (m.includes('coder')) return { input: 1.45, output: 5.80 };
+            return { input: 5.0, output: 15.0 }; // 默认合理备用
+        }
+
+        // 更新书籍设置
+        async function updateBookSetting(key, val) {
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (book) {
+                book.settings[key] = val;
+                saveStateToStorage();
+                
+                if (state.activeTab === 'dashboard') {
+                    renderCurrentWorkspace();
+                }
+                
+                showToast(`设置已更新: ${key} = ${val}`);
+            }
+        }
+
+        // 仅大纲确认
+        async function approveOutlineOnly() {
+            const titleInput = document.getElementById('edit-chapter-title').value.trim();
+            const summaryInput = document.getElementById('edit-chapter-summary').value.trim();
+
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}/chapters/${state.selectedChapterId}/approve`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: titleInput, summary: summaryInput })
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${state.selectedChapterId}/approve`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: titleInput, summary: summaryInput })
+                    }));
+                    
+                    const book = await res.json();
+                    const idx = state.books.findIndex(b => b.book_id === state.currentBookId);
+                    state.books[idx] = book;
+                } catch(e) {
+                    showToast("确认大纲网络请求失败", "error");
+                    return;
+                }
+            } else {
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                const volume = book.outline.volumes.find(v => v.volume_id === state.selectedVolumeId);
+                const chapter = volume.chapters.find(c => c.chapter_id === state.selectedChapterId);
+                chapter.title = titleInput;
+                chapter.summary = summaryInput;
+                chapter.status = 'approved';
+                saveStateToStorage();
+            }
+
+            renderOutlineTree();
+            renderCurrentWorkspace();
+            showToast("大纲已确认！章节状态变为 APPROVED");
+        }
+
+        // 回退大纲
+        async function revertToPending(volumeId, chapterId) {
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}/chapters/${chapterId}/revert`, {
+                        method: 'PUT'
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${chapterId}/revert`, {
+                        method: 'PUT'
+                    }));
+                    
+                    const book = await res.json();
+                    const idx = state.books.findIndex(b => b.book_id === state.currentBookId);
+                    state.books[idx] = book;
+                } catch(e) {
+                    showToast("回退请求失败", "error");
+                    return;
+                }
+            } else {
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                const volume = book.outline.volumes.find(v => v.volume_id === volumeId);
+                const chapter = volume.chapters.find(c => c.chapter_id === chapterId);
+                chapter.status = 'pending';
+                saveStateToStorage();
+            }
+
+            renderOutlineTree();
+            renderCurrentWorkspace();
+            showToast("章节已成功回退为大纲修改状态");
+        }
+
+        // 保存正文
+        async function saveNovelText(volumeId, chapterId) {
+            const editorVal = document.getElementById('novel-body-editor').value;
+            
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}/chapters/${chapterId}/save`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: editorVal })
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${chapterId}/save`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: editorVal })
+                    }));
+                    
+                    const book = await res.json();
+                    const idx = state.books.findIndex(b => b.book_id === state.currentBookId);
+                    state.books[idx] = book;
+                } catch(e) {
+                    showToast("保存正文网络失败", "error");
+                    return;
+                }
+            } else {
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                const volume = book.outline.volumes.find(v => v.volume_id === volumeId);
+                const chapter = volume.chapters.find(c => c.chapter_id === chapterId);
+                chapter.content = editorVal;
+                chapter.status = 'completed';
+                saveStateToStorage();
+            }
+
+            renderOutlineTree();
+            renderBookMeta();
+            showToast("正文手动保存成功！");
+        }
+
+        // 智能生成正文 (管线调用)
+        async function generateChapterBody(volumeId, chapterId) {
+            const titleInput = document.getElementById('edit-chapter-title').value.trim();
+            const summaryInput = document.getElementById('edit-chapter-summary').value.trim();
+
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            const activeKey = getActiveApiKey(book.settings.current_model);
+
+            const overlay = document.getElementById('ai-loading-overlay');
+            const loadTitle = document.getElementById('ai-loading-title');
+            const loadSubtitle = document.getElementById('ai-loading-subtitle');
+            
+            overlay.classList.add('active');
+            loadTitle.innerText = `正在发起 [${(book.settings.current_model || "Sandbox").toUpperCase()}] 智能生成...`;
+            loadSubtitle.innerText = "智能装载设定集并执行痕迹去AI化优化...";
+
+            if (isFullStackMode && book.settings.current_model) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}/chapters/${chapterId}/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: titleInput,
+                            summary: summaryInput,
+                            api_key: activeKey
+                        })
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${chapterId}/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: titleInput,
+                            summary: summaryInput,
+                            api_key: activeKey
+                        })
+                    }));
+
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        await loadBooksData();
+                        
+                        state.activeDeAiChanges = data.de_ai_changes || [];
+                        state.activeLogicReports = data.logic_reports || [];
+                        
+                        renderOutlineTree();
+                        renderBookMeta();
+                        renderCurrentWorkspace();
+                        showToast("大模型正文与优化管线处理完毕！");
+                    } else {
+                        throw new Error(data.message || "未知生成错误");
+                    }
+                } catch(e) {
+                    showToast("大模型生成失败: " + e.message, "error");
+                } finally {
+                    overlay.classList.remove('active');
+                }
+            } else {
+                // Sandbox 离线 Mock 逻辑
+                setTimeout(() => {
+                    const volume = book.outline.volumes.find(v => v.volume_id === volumeId);
+                    const chapter = volume.chapters.find(c => c.chapter_id === chapterId);
+                    
+                    chapter.title = titleInput;
+                    chapter.summary = summaryInput;
+                    chapter.content = `当计算洪流在地下光纤中骤冷，林默睁开双眼。眼前没有了红色的追踪线，只剩生锈的管道。空气里浮着合成机油和陈旧的霉味，让人犯呕。\n\n“你醒了。”一个清冷的声音在耳畔响起。\n\n林默咬着牙爬起来，脖颈后方的神经插槽在突突直跳。他定睛一看，是一个皮衣洗得发白的姑娘盘腿在机箱上，那条用哑光碳纤维做的机械义肢有些扎眼。她轻轻敲击着那块旧软盘。\n\n“白雀？”林默问道。\n\n白雀微动目光：“能从三个仿生人‘猎犬’围剿里逃脱，还带出这数据，你倒是不简单。”`;
+                    chapter.status = 'completed';
+                    
+                    state.activeDeAiChanges = [
+                        { original: "总而言之", replacement: "如此说来" },
+                        { original: "嘴角勾起一抹笑容", replacement: "微微扬眉" }
+                    ];
+                    state.activeLogicReports = [
+                        { level: "info", text: "林默脑域物理芯片接口一致性匹配成功。" }
+                    ];
+
+                    saveStateToStorage();
+                    renderOutlineTree();
+                    renderBookMeta();
+                    renderCurrentWorkspace();
+                    overlay.classList.remove('active');
+                    showToast("本地沙盒模拟章节生成成功");
+                }, 2000);
+            }
+        }
+
+        // 手动去AI化优化
+        async function triggerDeAiProcess(volumeId, chapterId) {
+            const hasActiveApiKey = (state.apiKeys.gemini || state.apiKeys.deepseek || state.apiKeys.claude) && state.availableModels.length > 0;
+            if (!hasActiveApiKey && !isFullStackMode) {
+                showToast("⚠️ 当前处于离线 Sandbox 模式，请先在配置中心填写有效 API Key 并激活模型以启用真实的 AI 消除润色！", "warning");
+                return;
+            }
+
+            if (isFullStackMode) {
+                try {
+                    const res = await fetch(`/api/books/${state.currentBookId}/chapters/${chapterId}/de_ai`, {
+                        method: 'POST'
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${chapterId}/de_ai`, {
+                        method: 'POST'
+                    }));
+                    
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        state.activeDeAiChanges = data.changes || [];
+                        await loadBooksData();
+                        renderCurrentWorkspace();
+                        showToast("去AI套话优化完毕！");
+                    }
+                } catch(e) {
+                    showToast("去AI网络请求失败", "error");
+                }
+            } else {
+                const book = state.books.find(b => b.book_id === state.currentBookId);
+                const volume = book.outline.volumes.find(v => v.volume_id === volumeId);
+                const chapter = volume.chapters.find(c => c.chapter_id === chapterId);
+                
+                if (!chapter.content) return;
+                
+                chapter.content = chapter.content.replace(/总而言之/g, "如此说来");
+                state.activeDeAiChanges = [{ original: "总而言之", replacement: "如此说来" }];
+                
+                saveStateToStorage();
+                renderCurrentWorkspace();
+                showToast("本地Sandbox一键优化完毕！");
+            }
+        }
+
+        function getActiveApiKey(model) {
+            if (!model) return '';
+            const m = model.toLowerCase();
+            if (m.includes('gemini')) return state.apiKeys.gemini;
+            if (m.includes('deepseek') || m.includes('chat') || m.includes('coder')) return state.apiKeys.deepseek;
+            if (m.includes('claude') || m.includes('sonnet')) return state.apiKeys.claude;
+            return '';
+        }
+
+        // 模态配置
+        function openApiModal() {
+            document.getElementById('key-gemini').value = state.apiKeys.gemini;
+            document.getElementById('key-deepseek').value = state.apiKeys.deepseek;
+            document.getElementById('key-claude').value = state.apiKeys.claude;
+            document.getElementById('api-modal').classList.add('active');
+        }
+
+        function closeApiModal() {
+            document.getElementById('api-modal').classList.remove('active');
+        }
+
+        async function saveApiKeys() {
+            state.apiKeys.gemini = document.getElementById('key-gemini').value.trim();
+            state.apiKeys.deepseek = document.getElementById('key-deepseek').value.trim();
+            state.apiKeys.claude = document.getElementById('key-claude').value.trim();
+            saveStateToStorage();
+            
+            // 每次保存 Key，立刻动态发现并刷新可用模型列表！
+            showToast("正在连接大模型接口进行实际可用模型探测...");
+            await discoverAvailableModels();
+            
+            closeApiModal();
+            renderCurrentWorkspace(); // 重新渲染工作台的下拉框
+            showToast(`模型配置发现完毕，当前可用模型数量: ${state.availableModels.length}`);
+        }
+
+        // 数据备份导出 JSON
+        function exportData() {
+            const dataStr = JSON.stringify(state.books, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `novel_copilot_backup_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("数据备份文件已导出！");
+        }
+
+        function triggerImport() {
+            document.getElementById('file-upload-input').click();
+        }
+
+        function handleFileImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (Array.isArray(imported)) {
+                        state.books = imported;
+                    } else if (imported.BookContext) {
+                        state.books = [imported.BookContext];
+                    } else {
+                        throw new Error("格式不合法");
+                    }
+                    if (state.books.length > 0) {
+                        state.currentBookId = state.books[0].book_id;
+                    }
+                    saveStateToStorage();
+                    initBookDropdown();
+                    renderBookMeta();
+                    renderOutlineTree();
+                    renderCurrentWorkspace();
+                    showToast("数据导入成功！");
+                } catch(err) {
+                    showToast("导入失败: " + err.message, "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
