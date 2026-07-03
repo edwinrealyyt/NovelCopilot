@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 from typing import List, Dict, Optional
 
 # 本地 JSON 数据库路径
@@ -7,17 +8,18 @@ DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 class BookRepository:
     def __init__(self):
+        self._lock = threading.Lock()
         self._ensure_db_exists()
 
     def _ensure_db_exists(self):
         """确保底层数据库文件存在并包含默认结构"""
+        # _ensure_db_exists 应该由持有锁的 init 触发，或者加锁保护
         if not os.path.exists(DB_FILE):
-            # 写入一个初始化的空书籍列表结构
             with open(DB_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
 
     def _read_all(self) -> List[Dict]:
-        """读取所有书籍"""
+        """读取所有书籍 (供持有 Lock 的方法内部调用)"""
         self._ensure_db_exists()
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
@@ -37,7 +39,7 @@ class BookRepository:
             return []
 
     def _write_all(self, books: List[Dict]):
-        """写回所有书籍"""
+        """写回所有书籍 (供持有 Lock 的方法内部调用)"""
         try:
             with open(DB_FILE, "w", encoding="utf-8") as f:
                 json.dump(books, f, ensure_ascii=False, indent=2)
@@ -46,49 +48,53 @@ class BookRepository:
 
     def list_books(self) -> List[Dict]:
         """列出所有书籍的元数据"""
-        books = self._read_all()
-        return [
-            {
-                "book_id": b["book_id"],
-                "title": b["meta"]["title"],
-                "tags": b["meta"]["tags"],
-                "synopsis": b["meta"]["synopsis"]
-            }
-            for b in books
-        ]
+        with self._lock:
+            books = self._read_all()
+            return [
+                {
+                    "book_id": b["book_id"],
+                    "title": b["meta"]["title"],
+                    "tags": b["meta"]["tags"],
+                    "synopsis": b["meta"]["synopsis"]
+                }
+                for b in books
+            ]
 
     def get_book(self, book_id: str) -> Optional[Dict]:
         """获取某本书籍的完整 BookContext"""
-        books = self._read_all()
-        for b in books:
-            if b["book_id"] == book_id:
-                return b
-        return None
+        with self._lock:
+            books = self._read_all()
+            for b in books:
+                if b["book_id"] == book_id:
+                    return b
+            return None
 
     def save_book(self, book_context: Dict) -> bool:
         """保存或更新一本书"""
-        books = self._read_all()
-        book_id = book_context["book_id"]
-        
-        # 查找是否存在并替换，否则追加
-        found = False
-        for i, b in enumerate(books):
-            if b["book_id"] == book_id:
-                books[i] = book_context
-                found = True
-                break
-        
-        if not found:
-            books.append(book_context)
+        with self._lock:
+            books = self._read_all()
+            book_id = book_context["book_id"]
             
-        self._write_all(books)
-        return True
+            # 查找是否存在并替换，否则追加
+            found = False
+            for i, b in enumerate(books):
+                if b["book_id"] == book_id:
+                    books[i] = book_context
+                    found = True
+                    break
+            
+            if not found:
+                books.append(book_context)
+                
+            self._write_all(books)
+            return True
 
     def delete_book(self, book_id: str) -> bool:
         """删除一本书"""
-        books = self._read_all()
-        filtered = [b for b in books if b["book_id"] != book_id]
-        if len(filtered) < len(books):
-            self._write_all(filtered)
-            return True
-        return False
+        with self._lock:
+            books = self._read_all()
+            filtered = [b for b in books if b["book_id"] != book_id]
+            if len(filtered) < len(books):
+                self._write_all(filtered)
+                return True
+            return False

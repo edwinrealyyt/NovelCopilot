@@ -324,7 +324,8 @@ try {
 Write-Host "`n[*] 正在创建桌面快捷方式..." -ForegroundColor Cyan
 try {
     $WshShell = New-Object -ComObject WScript.Shell
-    $shortcutPath = Join-Path [System.Environment]::GetFolderPath("Desktop") "NovelCopilot.lnk"
+    $desktopPath = [System.Environment]::GetFolderPath("Desktop")
+    $shortcutPath = Join-Path $desktopPath "NovelCopilot.lnk"
     $Shortcut = $WshShell.CreateShortcut($shortcutPath)
     $Shortcut.TargetPath = "powershell.exe"
     $Shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScriptPath`""

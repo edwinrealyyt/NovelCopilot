@@ -10,6 +10,7 @@ class BookMeta(BaseModel):
     synopsis: str
     target_word_count: int
     daily_update_words: int
+    words_per_chapter: int = 3000
 
 class Chapter(BaseModel):
     chapter_id: int
@@ -44,6 +45,9 @@ class BookCreateRequest(BaseModel):
     synopsis: str
     target_word_count: int = 500000
     daily_update_words: int = 6000
+    words_per_chapter: int = 3000
+    api_key: Optional[str] = ""
+    model: Optional[str] = ""
 
 class ChapterApproveRequest(BaseModel):
     title: str
@@ -57,7 +61,23 @@ class ChapterGenerateRequest(BaseModel):
 class NovelSaveRequest(BaseModel):
     content: str
 
+class RegenerateOutlineRequest(BaseModel):
+    api_key: Optional[str] = ""
+    resume: Optional[bool] = False
+    model: Optional[str] = ""
+
+class SettingsUpdateRequest(BaseModel):
+    current_model: str
+    de_ai_level: str
+
 class APIKeySettings(BaseModel):
     gemini: Optional[str] = ""
     deepseek: Optional[str] = ""
     claude: Optional[str] = ""
+
+class LogicCheckRequest(BaseModel):
+    api_key: Optional[str] = ""
+
+class DeAiPolishRequest(BaseModel):
+    api_key: Optional[str] = ""
+

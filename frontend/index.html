@@ -1802,12 +1802,23 @@
                             <input type="text" id="new-tags" class="form-input" placeholder="如：科幻, 赛博朋克">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">预计总字数 (字)</label>
-                            <input type="number" id="new-target-words" class="form-input" value="120000">
+                            <label class="form-label" style="white-space: nowrap;">预计总字数 (字)</label>
+                            <input type="number" id="new-target-words" class="form-input" value="120000" oninput="updateNewBookCalcDays()">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">预计日更量 (字)</label>
-                            <input type="number" id="new-daily-words" class="form-input" value="6000">
+                            <label class="form-label" style="white-space: nowrap;">单章平均字数 (字)</label>
+                            <input type="number" id="new-words-per-chapter" class="form-input" value="3000" min="500" step="500">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="white-space: nowrap;">预计日更量 (字/天)</label>
+                            <input type="number" id="new-daily-words" class="form-input" value="6000" oninput="updateNewBookCalcDays()">
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                            <div style="font-size: 13px; color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); padding: 8px 12px; border-radius: 8px; height: 38px; display: flex; align-items: center; gap: 6px; box-sizing: border-box;">
+                                <span>📊 预计连更排期:</span>
+                                <strong id="new-calc-days" style="color: var(--color-primary); font-family: monospace; font-size: 15px;">20</strong>
+                                <span>天</span>
+                            </div>
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">世界观设定背景</label>
@@ -1840,6 +1851,7 @@
             const tagsInput = document.getElementById('new-tags').value.trim();
             const targetWords = parseInt(document.getElementById('new-target-words').value) || 120000;
             const dailyWords = parseInt(document.getElementById('new-daily-words').value) || 6000;
+            const wordsPerChapter = parseInt(document.getElementById('new-words-per-chapter').value) || 3000;
             const background = document.getElementById('new-background').value.trim();
             const synopsis = document.getElementById('new-synopsis').value.trim();
 
@@ -1857,7 +1869,8 @@
                 background,
                 synopsis,
                 target_word_count: targetWords,
-                daily_update_words: dailyWords
+                daily_update_words: dailyWords,
+                words_per_chapter: wordsPerChapter
             };
 
             if (isFullStackMode) {
@@ -1887,13 +1900,32 @@
             } else {
                 setTimeout(() => {
                     const book_id = "book-" + Date.now();
-                    const totalChapters = Math.max(1, Math.floor(targetWords / 3000));
+                    const totalChapters = Math.max(1, Math.floor(targetWords / wordsPerChapter));
                     
-                    let chaptersPerVolume = 10;
-                    if (totalChapters <= 10) chaptersPerVolume = 5;
-                    else if (totalChapters > 30) chaptersPerVolume = 15;
-                    
-                    const numVolumes = Math.ceil(totalChapters / chaptersPerVolume);
+                    let numVolumes = 1;
+                    let chaptersPerVolume = totalChapters;
+                    if (totalChapters <= 15) {
+                        numVolumes = 1;
+                        chaptersPerVolume = totalChapters;
+                    } else if (totalChapters <= 50) {
+                        numVolumes = 2;
+                        chaptersPerVolume = Math.ceil(totalChapters / 2);
+                    } else if (totalChapters <= 120) {
+                        numVolumes = 3;
+                        chaptersPerVolume = Math.ceil(totalChapters / 3);
+                    } else if (totalChapters <= 250) {
+                        numVolumes = 4;
+                        chaptersPerVolume = Math.ceil(totalChapters / 4);
+                    } else if (totalChapters <= 500) {
+                        numVolumes = 6;
+                        chaptersPerVolume = Math.ceil(totalChapters / 6);
+                    } else if (totalChapters <= 1000) {
+                        numVolumes = 8;
+                        chaptersPerVolume = Math.ceil(totalChapters / 8);
+                    } else {
+                        numVolumes = 12;
+                        chaptersPerVolume = Math.ceil(totalChapters / 12);
+                    }
                     const volumes = [];
                     let globalIdx = 1;
 
@@ -2345,29 +2377,295 @@
             `;
             rightCol.appendChild(logicCard);
 
-            // 3. 设定集速查
-            const settingsQuickCard = document.createElement('div');
-            settingsQuickCard.className = 'glass-panel panel-card';
-            settingsQuickCard.innerHTML = `
-                <div class="panel-card-title">
-                    <span>💡 当前关联设定集</span>
-                </div>
-                <div class="setting-tag-container">
-                    <span class="setting-chip">林默 (主角/数据清理员)</span>
-                    <span class="setting-chip">白雀 (女主/方舟极客)</span>
-                    <span class="setting-chip">神代重工 (垄断巨头)</span>
-                    <span class="setting-chip">天启之门 (底层协议)</span>
-                    <span class="setting-chip">第十三区 (贫民窟)</span>
-                </div>
-            `;
-            rightCol.appendChild(settingsQuickCard);
+
 
             dashboardGrid.appendChild(rightCol);
             container.appendChild(dashboardGrid);
         }
 
+        // 华丽的选择模态框组件，带有磨砂玻璃效果，支持三个操作：断点续传、全部重来、取消
+        function showOutlineResumeModal(successfulCount) {
+            return new Promise((resolve) => {
+                const modalId = 'outline-resume-modal';
+                let existing = document.getElementById(modalId);
+                if (existing) existing.remove();
+
+                const modal = document.createElement('div');
+                modal.id = modalId;
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                modal.style.backdropFilter = 'blur(10px)';
+                modal.style.display = 'flex';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                modal.style.zIndex = '99999';
+                modal.style.opacity = '0';
+                modal.style.transition = 'opacity 0.3s ease';
+
+                const card = document.createElement('div');
+                card.className = 'glass-panel';
+                card.style.padding = '30px';
+                card.style.borderRadius = '16px';
+                card.style.maxWidth = '450px';
+                card.style.width = '90%';
+                card.style.textAlign = 'center';
+                card.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.37)';
+                card.style.border = '1px solid rgba(255, 255, 255, 0.18)';
+                card.style.transform = 'scale(0.9)';
+                card.style.transition = 'transform 0.3s ease';
+
+                card.innerHTML = `
+                    <h3 style="margin-top: 0; color: var(--color-primary); font-size: 20px; margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        🔌 检测到大纲生成进度
+                    </h3>
+                    <p style="font-size: 14px; line-height: 1.6; color: #e0e0e0; margin-bottom: 25px;">
+                        你的小说目前已有前 <strong>${successfulCount}</strong> 卷成功生成了完整的章节细纲。你希望如何继续？
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button id="btn-resume-continue" class="btn-primary" style="padding: 12px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            🚀 断点续传（从第 ${successfulCount + 1} 卷继续）
+                        </button>
+                        <button id="btn-resume-restart" class="btn-secondary" style="padding: 10px; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                            ♻️ 彻底抹除（清空大纲全部重来）
+                        </button>
+                        <button id="btn-resume-cancel" style="padding: 10px; font-size: 13px; background: transparent; color: #aaa; border: none; cursor: pointer; transition: all 0.2s;">
+                            取消操作
+                        </button>
+                    </div>
+                `;
+
+                modal.appendChild(card);
+                document.body.appendChild(modal);
+
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 10);
+
+                const cleanUp = (result) => {
+                    modal.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        modal.remove();
+                        resolve(result);
+                    }, 300);
+                };
+
+                document.getElementById('btn-resume-continue').onclick = () => cleanUp(true);
+                document.getElementById('btn-resume-restart').onclick = () => cleanUp(false);
+                document.getElementById('btn-resume-cancel').onclick = () => cleanUp(null);
+            });
+        }
+
+        // 重新生成大纲逻辑（流式接收与沙盒模拟）
+        async function triggerRegenerateOutline(forcedResume = undefined) {
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            if (!book) return;
+
+            const activeKey = getActiveApiKey(book.settings.current_model);
+            if (isFullStackMode && (!activeKey || !activeKey.trim())) {
+                showToast("⚠️ 当前未配置或激活与所选模型匹配的 API 密钥，请先在顶部配置中心填写并测试保存！", "error");
+                return;
+            }
+
+            const hasActiveApiKey = (state.apiKeys.gemini || state.apiKeys.deepseek || state.apiKeys.claude) && state.availableModels.length > 0;
+            if (!hasActiveApiKey && !isFullStackMode) {
+                showToast("⚠️ 当前处于离线 Sandbox 模式，请先在配置中心填写有效 API Key 并激活模型以启用真实的 AI 大纲重新生成！", "warning");
+                return;
+            }
+
+            // 🔌 检测已有的成功卷大纲以提供断点续传选项
+            let resumeMode = false;
+            if (forcedResume !== undefined) {
+                resumeMode = forcedResume;
+            } else if (isFullStackMode) {
+                const hasExistingOutline = book.outline && book.outline.volumes && book.outline.volumes.length > 0;
+                const successfulVols = hasExistingOutline ? book.outline.volumes.filter(v => v.chapters && v.chapters.length > 0 && !v.chapters.some(c => c.title.includes("(兜底篇)"))) : [];
+                
+                if (successfulVols.length > 0) {
+                    const choice = await showOutlineResumeModal(successfulVols.length);
+                    if (choice === null) {
+                        return; // 用户取消了操作，不发起请求
+                    }
+                    resumeMode = choice; // true = 断点续传, false = 彻底重来
+                }
+            }
+
+            const overlay = document.getElementById('ai-loading-overlay');
+            const loadTitle = document.getElementById('ai-loading-title');
+            const loadSubtitle = document.getElementById('ai-loading-subtitle');
+            
+            // 进度条渲染
+            let progressContainer = document.getElementById('ai-progress-container');
+            let progressBar = document.getElementById('ai-progress-bar');
+            
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.id = 'ai-progress-container';
+                progressContainer.style.width = '300px';
+                progressContainer.style.height = '6px';
+                progressContainer.style.background = 'rgba(255,255,255,0.1)';
+                progressContainer.style.borderRadius = '3px';
+                progressContainer.style.marginTop = '20px';
+                progressContainer.style.overflow = 'hidden';
+                progressContainer.style.position = 'relative';
+                
+                progressBar = document.createElement('div');
+                progressBar.id = 'ai-progress-bar';
+                progressBar.style.width = '0%';
+                progressBar.style.height = '100%';
+                progressBar.style.background = 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))';
+                progressBar.style.transition = 'width 0.3s ease';
+                progressBar.style.boxShadow = '0 0 8px var(--color-primary)';
+                
+                progressContainer.appendChild(progressBar);
+                overlay.appendChild(progressContainer);
+            }
+            
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            loadTitle.innerText = resumeMode ? "正在断点恢复生成大纲" : "大纲智能规划重塑造中";
+            loadSubtitle.innerText = "正在评估小说最新背景设定，构建情节起承转合结构...";
+            overlay.classList.add('active');
+
+            if (isFullStackMode) {
+                let isCompleted = false;
+                try {
+                    const reqBody = { api_key: activeKey, resume: resumeMode, model: book.settings.current_model };
+                    const res = await fetch(`/api/books/${state.currentBookId}/regenerate_outline`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reqBody)
+                    }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/regenerate_outline`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reqBody)
+                    }));
+
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.detail || `HTTP Error ${res.status}`);
+                    }
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let buffer = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split("\n");
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            let dataStr = line.replace(/^data:\s*/, '').trim();
+                            if (!dataStr) continue;
+
+                            try {
+                                const parsed = JSON.parse(dataStr);
+                                if (parsed.event === 'progress') {
+                                    progressBar.style.width = `${parsed.percent}%`;
+                                    loadSubtitle.innerText = `${parsed.message}`;
+                                } else if (parsed.event === 'error') {
+                                    throw new Error(parsed.message);
+                                } else if (parsed.event === 'complete') {
+                                    isCompleted = true;
+                                    const data = parsed.data;
+                                    const idx = state.books.findIndex(b => b.book_id === state.currentBookId);
+                                    if (idx !== -1) {
+                                        state.books[idx] = data;
+                                    }
+                                    state.selectedVolumeId = data.outline.volumes[0].volume_id;
+                                    state.selectedChapterId = data.outline.volumes[0].chapters[0].chapter_id;
+                                    
+                                    progressBar.style.width = '100%';
+                                    loadSubtitle.innerText = "大纲重塑成功！";
+                                    setTimeout(() => {
+                                        overlay.classList.remove('active');
+                                        initBookDropdown();
+                                        renderBookMeta();
+                                        renderOutlineTree();
+                                        renderCurrentWorkspace();
+                                    }, 1000);
+                                }
+                            } catch(e) {
+                                console.error("解析SSE行出错", e, line);
+                            }
+                        }
+                    }
+                } catch(e) {
+                    const isRateLimit = e.message.includes("429") || e.message.toLowerCase().includes("rate limit") || e.message.includes("频繁触发") || e.message.includes("限流");
+                    if (isRateLimit) {
+                        showToast("⚠️ 触发 API 额度限流！已保存当前成功进度。您可在右下角设置中【切换底座模型】，再重新点击生成并选择【断点续传】继续。", "warning");
+                    } else {
+                        showToast("大纲生成失败: " + e.message, "error");
+                    }
+                    overlay.classList.remove('active');
+                }
+            } else {
+                // Sandbox 模式模拟
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                    loadSubtitle.innerText = "大纲重塑成功！";
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        showToast("本地 Sandbox 大纲模拟生成成功！");
+                    }, 1000);
+                }, 3000);
+            }
+        }
+
         // 大纲看板
         function renderOutlineBoard(container, book) {
+            // 计算已有的成功卷大纲以决定是否显示接续按钮
+            const hasExistingOutline = book.outline && book.outline.volumes && book.outline.volumes.length > 0;
+            const successfulVols = hasExistingOutline ? book.outline.volumes.filter(v => v.chapters && v.chapters.length > 0 && !v.chapters.some(c => c.title.includes("(兜底篇)"))) : [];
+            const hasProgressToResume = successfulVols.length > 0;
+
+            // 添加重新生成大纲的主控制条，使其符合 Neon Cyberpunk 丰富美学
+            const actionBar = document.createElement('div');
+            actionBar.className = 'glass-panel';
+            actionBar.style.display = 'flex';
+            actionBar.style.justifyContent = 'space-between';
+            actionBar.style.alignItems = 'center';
+            actionBar.style.marginBottom = '20px';
+            actionBar.style.padding = '16px 24px';
+            actionBar.style.borderRadius = '12px';
+            actionBar.style.border = '1px solid var(--border-color)';
+            actionBar.style.background = 'rgba(20, 20, 32, 0.45)';
+            actionBar.style.boxShadow = 'var(--glass-shadow)';
+
+            actionBar.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span style="font-size:16px; font-weight:600; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+                        🗺️ 小说全景看板
+                    </span>
+                    <span style="font-size:12px; color:var(--text-muted);">在此纵览全书卷章。若修改了设定背景或核心大纲，可选择重新生成全新大纲或对接续大纲。</span>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button class="btn-action primary" onclick="triggerRegenerateOutline(false)" style="border-radius:8px; font-size:13px; padding:10px 18px; display:inline-flex; align-items:center;">
+                        <svg style="width: 14px; height: 14px; margin-right: 6px; display: inline-block; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"></path>
+                        </svg>
+                        重新生成全新大纲
+                    </button>
+                    <button class="btn-action" onclick="triggerRegenerateOutline(true)" style="border-radius:8px; font-size:13px; padding:10px 18px; display:${hasProgressToResume ? 'inline-flex' : 'none'}; align-items:center; background:rgba(0, 168, 204, 0.18); border:1px solid rgba(0, 168, 204, 0.45); color:#00cbd6; text-shadow:0 0 4px rgba(0, 168, 204, 0.3);">
+                        <svg style="width: 14px; height: 14px; margin-right: 6px; display: inline-block; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        保留当前进度，接续生成
+                    </button>
+                </div>
+            `;
+            container.appendChild(actionBar);
+
             const boardContainer = document.createElement('div');
             boardContainer.className = 'board-container';
 
@@ -2499,6 +2797,29 @@
                 book.settings[key] = val;
                 saveStateToStorage();
                 
+                // 全栈模式下同步更新后端设置，保证后端大模型切换真正生效
+                if (isFullStackMode) {
+                    try {
+                        await fetch(`/api/books/${state.currentBookId}/settings`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                current_model: book.settings.current_model,
+                                de_ai_level: book.settings.de_ai_level
+                            })
+                        }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/settings`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                current_model: book.settings.current_model,
+                                de_ai_level: book.settings.de_ai_level
+                            })
+                        }));
+                    } catch(e) {
+                        console.error("同步设置失败", e);
+                    }
+                }
+
                 if (state.activeTab === 'dashboard') {
                     renderCurrentWorkspace();
                 }
@@ -2706,12 +3027,19 @@
                 return;
             }
 
+            const book = state.books.find(b => b.book_id === state.currentBookId);
+            const activeKey = getActiveApiKey(book.settings.current_model);
+
             if (isFullStackMode) {
                 try {
                     const res = await fetch(`/api/books/${state.currentBookId}/chapters/${chapterId}/de_ai`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: activeKey })
                     }).catch(() => fetch(`${API_BASE}/api/books/${state.currentBookId}/chapters/${chapterId}/de_ai`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: activeKey })
                     }));
                     
                     const data = await res.json();
