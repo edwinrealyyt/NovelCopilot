@@ -5,3 +5,6 @@ __pycache__/
 .vscode/
 *.log
 .gemini/
+data/
+data.json
+*.bak
